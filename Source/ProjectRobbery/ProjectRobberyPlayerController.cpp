@@ -2,6 +2,7 @@
 
 #include "ProjectRobberyPlayerController.h"
 
+#include "ProjectRobbery.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "Engine/World.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
@@ -100,7 +101,7 @@ void AProjectRobberyPlayerController::SetNewMoveDestination(const FVector DestLo
         float const Distance = FVector::Dist(DestLocation, MyPawn->GetActorLocation());
 
         // We need to issue move command only if far enough in order for walk animation to play correctly
-        if ((Distance > 120.0f))
+        if ((Distance > 5.0f))
         {
             UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, DestLocation);
         }
