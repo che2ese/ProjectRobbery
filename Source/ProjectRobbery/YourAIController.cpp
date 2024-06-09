@@ -65,7 +65,17 @@ void AYourAIController::Tick(float DeltaSeconds)
         AMyTestCharacter* Player = Cast<AMyTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
         if (Player)
         {
-            MoveToActor(Player, 2.0f);
+            DistanceToPlayer = FVector::Dist(Player->GetActorLocation(), EnemyCharacter->GetActorLocation());
+            if (DistanceToPlayer > AILoseSightRadius)
+            {
+                bIsPlayerDetected = false;
+                UE_LOG(LogTemp, Warning, TEXT("Player Lost!"));
+                ReturnToWaypoints();
+            }
+            else
+            {
+                MoveToActor(Player, 2.0f);
+            }
         }
     }
     else
@@ -76,6 +86,7 @@ void AYourAIController::Tick(float DeltaSeconds)
         }
     }
 }
+
 
 FRotator AYourAIController::GetControlRotation() const
 {
@@ -102,9 +113,13 @@ void AYourAIController::OnPawnDetected(const TArray<AActor*>& DetectedPawns)
     }
 
     // 플레이어를 감지하지 못한 경우
-    if (!bIsPlayerDetected && EnemyCharacter != nullptr)
+    if (!bIsPlayerDetected && bPreviouslyDetected)
     {
-        ReturnToWaypoints();
+        UE_LOG(LogTemp, Warning, TEXT("Player Lost!"));
+        if (EnemyCharacter != nullptr)
+        {
+            ReturnToWaypoints();
+        }
     }
 }
 
