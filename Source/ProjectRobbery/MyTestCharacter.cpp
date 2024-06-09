@@ -32,8 +32,13 @@ AMyTestCharacter::AMyTestCharacter()
     // Initialize health
     Health = 100.0f;
 
+    GetCharacterMovement()->MaxWalkSpeed = 300.0f;
+
     // Enable overlap events
     GetCapsuleComponent()->SetCollisionProfileName(TEXT("Pawn"));
+
+    // Initialize sprinting
+    bIsSprinting = false;
 }
 
 void AMyTestCharacter::BeginPlay()
@@ -57,6 +62,9 @@ void AMyTestCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
     // 이동 함수들을 입력에 바인딩합니다.
     PlayerInputComponent->BindAxis("MoveForward", this, &AMyTestCharacter::MoveForward);
     PlayerInputComponent->BindAxis("MoveRight", this, &AMyTestCharacter::MoveRight);
+    // Sprint 키 입력에 바인딩합니다.
+    PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AMyTestCharacter::StartSprinting);
+    PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AMyTestCharacter::StopSprinting);
 }
 
 void AMyTestCharacter::MoveForward(float Value)
@@ -82,7 +90,22 @@ void AMyTestCharacter::MoveRight(float Value)
         AddMovementInput(-Direction, Value);
     }
 }
+void AMyTestCharacter::StartSprinting()
+{
+    bIsSprinting = true;
+    GetCharacterMovement()->MaxWalkSpeed = 600.f;
+    // Debug 메시지 추가
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Started Sprinting"));
+    }
+}
 
+void AMyTestCharacter::StopSprinting()
+{
+    bIsSprinting = false;
+    GetCharacterMovement()->MaxWalkSpeed = 300.f;
+}
 void AMyTestCharacter::ReduceHealth(float Amount)
 {
     Health -= Amount;

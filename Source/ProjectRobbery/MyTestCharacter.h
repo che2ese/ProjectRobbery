@@ -1,8 +1,9 @@
+// MyTestCharacter.h
+
 #pragma once
 
 #include "BasicCharacter.h"
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
 
 #include "MyTestCharacter.generated.h"
 
@@ -15,18 +16,15 @@ public:
     AMyTestCharacter();
 
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-    virtual void BeginPlay() override;              // BeginPlay 함수 선언 추가
-    virtual void Tick(float DeltaTime) override;    // Tick 함수 선언 추가
+    virtual void BeginPlay() override;
+    virtual void Tick(float DeltaTime) override;
 
-    // Player health
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
     float Health;
 
-    // Function to reduce health
     UFUNCTION()
     void ReduceHealth(float Amount);
 
-    // Function to handle overlap events
     UFUNCTION()
     void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp,
                         class AActor* OtherActor,
@@ -39,9 +37,16 @@ private:
     void MoveForward(float Value);
     void MoveRight(float Value);
 
+    // Shift 키 관련 함수
+    void StartSprinting();
+    void StopSprinting();
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
     class USpringArmComponent* CameraBoom;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
     class UCameraComponent* FollowCamera;
+
+
+    bool bIsSprinting;
 };
