@@ -4,6 +4,8 @@
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 AYourAIController::AYourAIController()
 {
@@ -70,10 +72,12 @@ void AYourAIController::Tick(float DeltaSeconds)
             {
                 bIsPlayerDetected = false;
                 UE_LOG(LogTemp, Warning, TEXT("Player Lost!"));
+                EnemyCharacter->GetCharacterMovement()->MaxWalkSpeed = 150.f;    // 속도 원래대로
                 ReturnToWaypoints();
             }
             else
             {
+                EnemyCharacter->GetCharacterMovement()->MaxWalkSpeed = 300.f;
                 MoveToActor(Player, 2.0f);
             }
         }
@@ -82,6 +86,7 @@ void AYourAIController::Tick(float DeltaSeconds)
     {
         if (EnemyCharacter != nullptr)
         {
+            EnemyCharacter->GetCharacterMovement()->MaxWalkSpeed = 150.f;
             ReturnToWaypoints();
         }
     }
