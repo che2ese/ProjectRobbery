@@ -7,6 +7,11 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Door.h"
+#include "Kismet/GameplayStatics.h"
+#include "EngineUtils.h"
+#include "YourAIController.h"
+#include "Camera.h"
 
 // Sets default values
 AMyTestCharacter::AMyTestCharacter()
@@ -65,6 +70,8 @@ void AMyTestCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
     // Sprint 키 입력에 바인딩합니다.
     PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AMyTestCharacter::StartSprinting);
     PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AMyTestCharacter::StopSprinting);
+    PlayerInputComponent->BindAction("E", IE_Pressed, this, &AMyTestCharacter::UseCamera);
+    PlayerInputComponent->BindAction("Q", IE_Pressed, this, &AMyTestCharacter::UseCoat);
 }
 
 void AMyTestCharacter::MoveForward(float Value)
@@ -111,9 +118,11 @@ void AMyTestCharacter::ReduceHealth(float Amount)
     Health -= Amount;
     if (Health <= 0)
     {
+        // Destroy();
         // Handle player death
     }
     // Print "Damage" message to the screen
+    UE_LOG(LogTemp, Log, TEXT("Attacked! HP is %f"), Health);
     if (GEngine)
     {
         GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Damage"));
@@ -153,6 +162,50 @@ void AMyTestCharacter::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp,
             {
                 GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Overlap with Enemy"));
             }
+        }
+    }
+}
+
+bool AMyTestCharacter::HasKey(int32 num)
+{
+    for (int i = 0; i < Inventory.Num(); i++)
+    {
+        if (Inventory[i] == EItemType::Item_Key)
+        {
+            for (int j = 0; j < keySet.Num(); j++)
+            {
+                if (keySet[j] == num)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+    return false;
+}
+
+void AMyTestCharacter::UseCamera()
+{
+    UE_LOG(LogTemp, Log, TEXT("Use Camera"));
+    for (int i = 0; i < Inventory.Num(); i++)
+    {
+        if (Inventory[i] == EItemType::Item_Camera)
+        {
+            for (TActorIterator<ACamera> It(GetWorld()); It; ++It)
+                It->enable = false;
+        }
+    }
+}
+void AMyTestCharacter::UseCoat()
+{
+    UE_LOG(LogTemp, Log, TEXT("Use Coat"));
+    for (int i = 0; i < Inventory.Num(); i++)
+    {
+        if (Inventory[i] == EItemType::Item_Coat)
+        {
+            for (TActorIterator<AYourAIController> It(GetWorld()); It; ++It)
+                It->coatActive = true;
         }
     }
 }

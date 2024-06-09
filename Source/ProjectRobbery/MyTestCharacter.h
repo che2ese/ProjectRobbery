@@ -4,6 +4,7 @@
 
 #include "BasicCharacter.h"
 #include "CoreMinimal.h"
+#include "ItemBase.h"
 
 #include "MyTestCharacter.generated.h"
 
@@ -32,6 +33,19 @@ public:
                         int32 OtherBodyIndex,
                         bool bFromSweep,
                         const FHitResult& SweepResult);
+
+    UFUNCTION()
+    bool HasKey(int32 num);
+    UFUNCTION()
+    void UseCamera();
+    UFUNCTION()
+    void UseCoat();
+
+    UPROPERTY(EditAnywhere)
+    TArray<EItemType> Inventory;
+
+    UPROPERTY(EditAnywhere)
+    TArray<int32> keySet;
 
 private:
     void MoveForward(float Value);

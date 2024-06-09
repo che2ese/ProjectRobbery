@@ -6,6 +6,7 @@
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Camera.h"
 
 AYourAIController::AYourAIController()
 {
@@ -62,7 +63,28 @@ void AYourAIController::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
 
-    if (bIsPlayerDetected)
+    atkCount -= 1 * DeltaSeconds;
+    if (coatActive)
+    {
+        coatCount -= 1 * DeltaSeconds;
+        if (coatCount <= 0.5)
+        {
+            coatCount = 10;
+            coatActive = false;
+        }
+    }
+    if (cameraActive)
+    {
+        MoveToActor(camera, 2.0f);
+        float distanceToCamera = GetPawn()->GetDistanceTo(camera);
+        if (distanceToCamera <= 100 || (bIsPlayerDetected && !coatActive))
+        {
+            cameraActive = false;
+            UE_LOG(LogTemp, Warning, TEXT("Shut down camera"));
+        }
+    }
+
+    else if (bIsPlayerDetected && !coatActive)
     {
         AMyTestCharacter* Player = Cast<AMyTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
         if (Player)

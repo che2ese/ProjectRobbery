@@ -47,6 +47,18 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = AI)
     float DistanceToPlayer = 0.f;
 
+    UPROPERTY(EditAnywhere)
+    bool cameraActive = false;
+    UPROPERTY(EditAnywhere)
+    bool coatActive = false;
+    UPROPERTY(EditAnywhere)
+    float atkCount = 10;
+    UPROPERTY(EditAnywhere)
+    float coatCount = 10;
+
+    UPROPERTY(EditAnywhere)
+    class ACamera* camera;
+
 private:
     UBlackboardComponent* BlackboardComp;
     UBehaviorTreeComponent* BehaviorComp;
