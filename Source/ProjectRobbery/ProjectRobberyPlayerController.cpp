@@ -54,29 +54,6 @@ void AProjectRobberyPlayerController::OnResetVR()
 
 void AProjectRobberyPlayerController::MoveToMouseCursor()
 {
-    if (UHeadMountedDisplayFunctionLibrary::IsHeadMountedDisplayEnabled())
-    {
-        if (AProjectRobberyCharacter* MyPawn = Cast<AProjectRobberyCharacter>(GetPawn()))
-        {
-            if (MyPawn->GetCursorToWorld())
-            {
-                UAIBlueprintHelperLibrary::SimpleMoveToLocation(this,
-                                                                MyPawn->GetCursorToWorld()->GetComponentLocation());
-            }
-        }
-    }
-    else
-    {
-        // Trace to see what is under the mouse cursor
-        FHitResult Hit;
-        GetHitResultUnderCursor(ECC_Visibility, false, Hit);
-
-        if (Hit.bBlockingHit)
-        {
-            // We hit something, move there
-            SetNewMoveDestination(Hit.ImpactPoint);
-        }
-    }
 }
 
 void AProjectRobberyPlayerController::MoveToTouchLocation(const ETouchIndex::Type FingerIndex, const FVector Location)
