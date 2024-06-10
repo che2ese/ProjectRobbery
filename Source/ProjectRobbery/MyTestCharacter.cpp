@@ -11,6 +11,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "EngineUtils.h"
 #include "YourAIController.h"
+#include "DrawDebugHelpers.h"
 #include "Camera.h"
 
 // Sets default values
@@ -44,6 +45,10 @@ AMyTestCharacter::AMyTestCharacter()
 
     // Initialize sprinting
     bIsSprinting = false;
+
+    FootstepAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("FootstepAudio"));
+    FootstepAudioComponent->SetupAttachment(RootComponent);    // FootstepAudioComponent를 RootComponent에 부착합니다.
+    FootstepAudioComponent->bAutoActivate = false;    // 게임 시작 시 자동으로 활성화되지 않도록 설정합니다.
 }
 
 void AMyTestCharacter::BeginPlay()
@@ -106,12 +111,21 @@ void AMyTestCharacter::StartSprinting()
     {
         GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Started Sprinting"));
     }
+    if (FootstepAudioComponent)
+    {
+        FootstepAudioComponent->Play();
+        PlaySoundEvent();
+    }
 }
 
 void AMyTestCharacter::StopSprinting()
 {
     bIsSprinting = false;
     GetCharacterMovement()->MaxWalkSpeed = 300.f;
+    if (FootstepAudioComponent->IsPlaying())
+    {
+        FootstepAudioComponent->Stop();
+    }
 }
 void AMyTestCharacter::ReduceHealth(float Amount)
 {
@@ -208,4 +222,18 @@ void AMyTestCharacter::UseCoat()
                 It->coatActive = true;
         }
     }
+}
+void AMyTestCharacter::PlaySoundEvent()
+{
+    // 소리 이벤트를 생성하고 재생합니다.
+    FHitResult HitResult;
+    FVector StartLocation = GetActorLocation();
+    FVector EndLocation =
+        StartLocation + FVector(100.0f, 0.0f, 0.0f);    // 예시로 100 유닛 앞에 소리 이벤트를 생성합니다.
+
+    // 소리 이벤트 생성
+    MakeNoise(1.0f, this, StartLocation);
+
+    // 디버그용으로 라인을 그립니다.
+    DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Red, false, 1.0f, 0, 1.0f);
 }

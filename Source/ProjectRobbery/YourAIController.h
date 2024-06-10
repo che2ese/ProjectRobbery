@@ -10,6 +10,7 @@ class UBehaviorTreeComponent;
 class UBlackboardComponent;
 class AEnemyCharacter;
 
+
 UCLASS(config = Game)
 class PROJECTROBBERY_API AYourAIController : public AAIController
 {
@@ -23,8 +24,10 @@ public:
     virtual void Tick(float DeltaSeconds) override;
     virtual FRotator GetControlRotation() const override;
 
+
+
     UFUNCTION()
-    void OnPawnDetected(const TArray<AActor*>& DetectedPawns);
+    void OnPerceptionUpdated(const TArray<AActor*>& DetectedPawns);
 
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = AI)
     float AISightRadius = 450.f;
@@ -42,10 +45,19 @@ public:
     class UAISenseConfig_Sight* SightConfig;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = AI)
+    class UAISenseConfig_Hearing* HearingConfig;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = AI)
     bool bIsPlayerDetected = false;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = AI)
+    bool bIsPlayerHearDetected = false;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = AI)
     float DistanceToPlayer = 0.f;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = AI)
+    float AIHearingRange = 500.f;    // AI가 소리를 감지하는 범위
 
     UPROPERTY(EditAnywhere)
     bool cameraActive = false;
@@ -64,7 +76,7 @@ private:
     UBehaviorTreeComponent* BehaviorComp;
 
     UPROPERTY()
-    AEnemyCharacter* EnemyCharacter;    // AEnemyCharacter 클래스의 포인터 선언
+    AEnemyCharacter* EnemyCharacter;
 
-    void ReturnToWaypoints();    // 웨이포인트로 돌아가는 함수 선언
+    void ReturnToWaypoints();
 };
