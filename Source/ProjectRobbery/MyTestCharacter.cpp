@@ -11,8 +11,10 @@
 #include "Kismet/GameplayStatics.h"
 #include "EngineUtils.h"
 #include "YourAIController.h"
-#include "DrawDebugHelpers.h"
 #include "Camera.h"
+#include "NoiseActor.h"
+#include "DrawDebugHelpers.h"
+#include "ProjectRobberyGameMode.h"
 
 // Sets default values
 AMyTestCharacter::AMyTestCharacter()
@@ -45,10 +47,6 @@ AMyTestCharacter::AMyTestCharacter()
 
     // Initialize sprinting
     bIsSprinting = false;
-
-    FootstepAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("FootstepAudio"));
-    FootstepAudioComponent->SetupAttachment(RootComponent);    // FootstepAudioComponent를 RootComponent에 부착합니다.
-    FootstepAudioComponent->bAutoActivate = false;    // 게임 시작 시 자동으로 활성화되지 않도록 설정합니다.
 }
 
 void AMyTestCharacter::BeginPlay()
@@ -75,8 +73,10 @@ void AMyTestCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
     // Sprint 키 입력에 바인딩합니다.
     PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AMyTestCharacter::StartSprinting);
     PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AMyTestCharacter::StopSprinting);
+    // 아이템 사용키
     PlayerInputComponent->BindAction("E", IE_Pressed, this, &AMyTestCharacter::UseCamera);
     PlayerInputComponent->BindAction("Q", IE_Pressed, this, &AMyTestCharacter::UseCoat);
+    PlayerInputComponent->BindAction("Noise", IE_Pressed, this, &AMyTestCharacter::UseNoise);
 }
 
 void AMyTestCharacter::MoveForward(float Value)
@@ -111,21 +111,12 @@ void AMyTestCharacter::StartSprinting()
     {
         GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Started Sprinting"));
     }
-    if (FootstepAudioComponent)
-    {
-        FootstepAudioComponent->Play();
-        PlaySoundEvent();
-    }
 }
 
 void AMyTestCharacter::StopSprinting()
 {
     bIsSprinting = false;
     GetCharacterMovement()->MaxWalkSpeed = 300.f;
-    if (FootstepAudioComponent->IsPlaying())
-    {
-        FootstepAudioComponent->Stop();
-    }
 }
 void AMyTestCharacter::ReduceHealth(float Amount)
 {
@@ -208,18 +199,29 @@ void AMyTestCharacter::UseCamera()
         {
             for (TActorIterator<ACamera> It(GetWorld()); It; ++It)
                 It->enable = false;
+            AGameModeBase* curBase = GetWorld()->GetAuthGameMode();
+            AProjectRobberyGameMode* curGameModeBase = Cast<AProjectRobberyGameMode>(curBase);
+            curGameModeBase->UseItems(Inventory[i]);
+            Inventory[i] = EItemType::Item_None;
+            break;
         }
     }
 }
+
 void AMyTestCharacter::UseCoat()
 {
-    UE_LOG(LogTemp, Log, TEXT("Use Coat"));
     for (int i = 0; i < Inventory.Num(); i++)
     {
         if (Inventory[i] == EItemType::Item_Coat)
         {
             for (TActorIterator<AYourAIController> It(GetWorld()); It; ++It)
                 It->coatActive = true;
+            AGameModeBase* curBase = GetWorld()->GetAuthGameMode();
+            AProjectRobberyGameMode* curGameModeBase = Cast<AProjectRobberyGameMode>(curBase);
+            curGameModeBase->UseItems(Inventory[i]);
+            Inventory[i] = EItemType::Item_None;
+            UE_LOG(LogTemp, Log, TEXT("Use Coat"));
+            break;
         }
     }
 }
@@ -236,4 +238,37 @@ void AMyTestCharacter::PlaySoundEvent()
 
     // 디버그용으로 라인을 그립니다.
     DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Red, false, 1.0f, 0, 1.0f);
+}
+
+bool AMyTestCharacter::HasPoint()
+{
+    for (int i = 0; i < Inventory.Num(); i++)
+    {
+        if (Inventory[i] == EItemType::Item_Point)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void AMyTestCharacter::UseNoise()
+{
+    UE_LOG(LogTemp, Log, TEXT("Use Noise"));
+    for (int i = 0; i < Inventory.Num(); i++)
+    {
+        if (Inventory[i] == EItemType::Item_Noise)
+        {
+            FVector myLoc = GetActorLocation();
+            FRotator myRot = GetActorRotation();
+            FActorSpawnParameters SpawnInfo;
+            ANoiseActor* noise =
+                GetWorld()->SpawnActor<ANoiseActor>(ANoiseActor::StaticClass(), myLoc, myRot, SpawnInfo);
+            AGameModeBase* curBase = GetWorld()->GetAuthGameMode();
+            AProjectRobberyGameMode* curGameModeBase = Cast<AProjectRobberyGameMode>(curBase);
+            curGameModeBase->UseItems(Inventory[i]);
+            Inventory[i] = EItemType::Item_None;
+            break;
+        }
+    }
 }

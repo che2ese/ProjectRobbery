@@ -1,10 +1,11 @@
+// MyTestCharacter.h
+
 #pragma once
 
 #include "BasicCharacter.h"
 #include "CoreMinimal.h"
 #include "ItemBase.h"
-#include "Sound/SoundBase.h"
-#include "Components/AudioComponent.h"
+
 #include "MyTestCharacter.generated.h"
 
 UCLASS()
@@ -35,17 +36,24 @@ public:
 
     UFUNCTION()
     bool HasKey(int32 num);
+
+    UFUNCTION()
+    bool HasPoint();
+
     UFUNCTION()
     void UseCamera();
+
     UFUNCTION()
     void UseCoat();
+
+    UFUNCTION()
+    void UseNoise();
 
     UPROPERTY(EditAnywhere)
     TArray<EItemType> Inventory;
 
     UPROPERTY(EditAnywhere)
     TArray<int32> keySet;
-
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
     USoundBase* FootstepSound;
 
@@ -56,9 +64,9 @@ private:
     void MoveForward(float Value);
     void MoveRight(float Value);
 
+    // Shift 키 관련 함수
     void StartSprinting();
     void StopSprinting();
-    
     void PlaySoundEvent();
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
@@ -66,6 +74,7 @@ private:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
     class UCameraComponent* FollowCamera;
+
 
     bool bIsSprinting;
 };

@@ -4,16 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "ItemBase.h"
-#include "ItemNoise.generated.h"
+#include "ItemPoint.generated.h"
 
 /**
- *
+ * 
  */
 UCLASS()
-class PROJECTROBBERY_API AItemNoise : public AItemBase
+class PROJECTROBBERY_API AItemPoint : public AItemBase
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
-    AItemNoise();
+    AItemPoint();
 };
