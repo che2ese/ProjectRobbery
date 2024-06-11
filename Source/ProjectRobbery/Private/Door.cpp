@@ -48,8 +48,14 @@ void ADoor::OnPlayerOverlap(UPrimitiveComponent* OverlappedComponent,
 {
     UE_LOG(LogTemp, Log, TEXT("%d Door"), doorNum);
     AMyTestCharacter* player = Cast<AMyTestCharacter>(OtherActor);
-    if (player != nullptr && player->HasKey(doorNum))
+
+    if (player != nullptr)
     {
+        if (bLocked && !player->HasKey(doorNum))
+        {
+            return;
+        }
+
         OpenDoor();
     }
 }
