@@ -113,7 +113,6 @@ void AYourAIController::Tick(float DeltaSeconds)
                     Player->ReduceHealth(2 * DeltaSeconds);
                     UE_LOG(LogTemp, Warning, TEXT("Damage"));
                 }
-                UE_LOG(LogTemp, Log, TEXT("SEE"));
                 EnemyCharacter->GetCharacterMovement()->MaxWalkSpeed = 300.f;
                 MoveToActor(Player, 2.0f);
             }
@@ -134,7 +133,6 @@ void AYourAIController::Tick(float DeltaSeconds)
             }
             else
             {
-                UE_LOG(LogTemp, Log, TEXT("HEAR"));
                 EnemyCharacter->GetCharacterMovement()->MaxWalkSpeed = 300.f;
                 MoveToActor(Player, 2.0f);
             }

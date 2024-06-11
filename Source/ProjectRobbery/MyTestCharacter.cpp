@@ -53,8 +53,14 @@ AMyTestCharacter::AMyTestCharacter()
     bIsSprinting = false;
 
     FootstepAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("FootstepAudio"));
-    FootstepAudioComponent->SetupAttachment(RootComponent);    // FootstepAudioComponent�� RootComponent�� �����մϴ�.
-    FootstepAudioComponent->bAutoActivate = false;    // ���� ���� �� �ڵ����� Ȱ��ȭ���� �ʵ��� �����մϴ�.
+    FootstepAudioComponent->SetupAttachment(RootComponent);    // FootstepAudioComponent를 RootComponent에 부착합니다.
+    FootstepAudioComponent->bAutoActivate = false;    // 게임 시작 시 자동으로 활성화되지 않도록 설정합니다.
+    FootstepAudioComponent->bAutoDestroy = false;    // 게임 시작 시 자동으로 활성화되지 않도록 설정합니다.
+
+    DogAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("DogSound"));
+    DogAudioComponent->SetupAttachment(RootComponent);    // FootstepAudioComponent를 RootComponent에 부착합니다.
+    DogAudioComponent->bAutoActivate = false;    // 게임 시작 시 자동으로 활성화되지 않도록 설정합니다.
+    DogAudioComponent->bAutoDestroy = false;    // 게임 시작 시 자동으로 활성화되지 않도록 설정합니다.
 }
 
 void AMyTestCharacter::BeginPlay()
@@ -121,17 +127,16 @@ void AMyTestCharacter::StartSprinting()
 {
     if (bIsSprinting || RunHealth <= 0)
     {
-        return;    // �̹� �޸��ų� RunHealth�� 0 �����̸� �� �̻� �޸��� ����
+        return;    // 이미 달리거나 RunHealth가 0 이하이면 더 이상 달리지 않음
     }
     bIsSprinting = true;
     GetCharacterMovement()->MaxWalkSpeed = 600.f;
 
-    // Debug �޽��� �߰�
+    // Debug 메시지 추가
     if (GEngine)
     {
         GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Started Sprinting"));
     }
-
     if (FootstepAudioComponent)
     {
         FootstepAudioComponent->Play();
@@ -143,7 +148,7 @@ void AMyTestCharacter::StopSprinting()
 {
     if (!bIsSprinting)
     {
-        return;    // �޸��� ���� ������ ����
+        return;    // 달리고 있지 않으면 무시
     }
 
     bIsSprinting = false;
