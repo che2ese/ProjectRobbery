@@ -158,6 +158,7 @@ void AMyTestCharacter::ReduceHealth(float Amount)
         GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Damage"));
     }
 }
+
 bool AMyTestCharacter::HasKey(int32 num)
 {
     for (int i = 0; i < Inventory.Num(); i++)
@@ -212,6 +213,7 @@ void AMyTestCharacter::UseCoat()
         }
     }
 }
+
 void AMyTestCharacter::PlaySoundEvent()
 {
     // �Ҹ� �̺�Ʈ�� �����ϰ� ����մϴ�.
@@ -226,6 +228,7 @@ void AMyTestCharacter::PlaySoundEvent()
     // ����׿����� ������ �׸��ϴ�.
     DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Red, false, 1.0f, 0, 1.0f);
 }
+
 void AMyTestCharacter::DepleteRunHealth(float DeltaTime)
 {
     RunHealth -= SprintDepletionRate * DeltaTime;    // SprintDepletionRate���� RunHealth�� ���ҽ�Ŵ
