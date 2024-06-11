@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/World.h"      // GetWorld 사용을 위해 추가
 #include "Sound/SoundCue.h"    // 오디오 관련 헤더 추가
 #include "YourAIController.h"
 
@@ -15,8 +16,8 @@ public:
     virtual void OnPerceptionUpdated(const TArray<AActor*>& DetectedPawns) override;
 
 protected:
-    // 오디오 컴포넌트를 생성하고 초기화하는 함수
-    void InitializeAudioComponent();
+    void IncreasePerceptionRanges();    // 인식 범위를 증가시키는 함수 선언
+    void DecreasePerceptionRanges();    // 인식 범위를 감소시키는 함수 선언
 
 private:
     void UpdateAIPerceptionRanges(bool bPlayerSeen, bool bPlayerHeard);

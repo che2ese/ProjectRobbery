@@ -54,9 +54,17 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Audio, meta = (AllowPrivateAccess = "true"))
     class UAudioComponent* FootstepAudioComponent;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+    USoundBase* DogSound;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Audio, meta = (AllowPrivateAccess = "true"))
+    class UAudioComponent* DogAudioComponent;    // 강아지 소리를 재생할 오디오 컴포넌트
+
     FTimerHandle SprintDepletionTimerHandle;    // SprintDepletion Ÿ�̸� �ڵ�
     void DepleteRunHealth(float DeltaTime);     // SprintDepletionRate���� RunHealth�� ���ҽ�Ű�� �Լ�
     void RecoverRunHealth(float DeltaTime);     // SprintRecoveryRate���� RunHealth�� ������Ű�� �Լ�
+
+    void PlaySoundEvent();
 
 private:
     void MoveForward(float Value);
@@ -65,7 +73,6 @@ private:
     // Shift Ű ���� �Լ�
     void StartSprinting();
     void StopSprinting();
-    void PlaySoundEvent();
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
     class USpringArmComponent* CameraBoom;
