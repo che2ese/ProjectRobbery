@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Components/CapsuleComponent.h" // CapsuleComponent 헤더 추가
 
 #include "EnemyCharacter.generated.h"
 
