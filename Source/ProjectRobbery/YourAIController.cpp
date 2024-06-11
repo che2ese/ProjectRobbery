@@ -108,10 +108,9 @@ void AYourAIController::Tick(float DeltaSeconds)
             }
             else
             {
-                if (DistanceToPlayer < 30.f)
+                if (DistanceToPlayer < 150.f)
                 {
-                    Player->ReduceHealth(2 * DeltaSeconds);
-                    UE_LOG(LogTemp, Warning, TEXT("Damage"));
+                    Player->ReduceHealth(1 * DeltaSeconds);
                 }
                 EnemyCharacter->GetCharacterMovement()->MaxWalkSpeed = 300.f;
                 MoveToActor(Player, 2.0f);
