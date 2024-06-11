@@ -4,6 +4,7 @@
 
 #include "../MyTestCharacter.h"
 #include "Components/BoxComponent.h"
+#include "../ProjectRobberyGameMode.h"
 #include "Components/StaticMeshComponent.h"
 
 // Sets default values
@@ -51,6 +52,9 @@ void AItemBase::OnPlayerOverlap(UPrimitiveComponent* OverlappedComponent,
         player->Inventory.Add(Item);
 
         UE_LOG(LogTemp, Log, TEXT("Get Item"));
+        AGameModeBase* curBase = GetWorld()->GetAuthGameMode();
+        AProjectRobberyGameMode* curGameModeBase = Cast<AProjectRobberyGameMode>(curBase);
+        curGameModeBase->AddItems(Item);
         Destroy();
     }
 }

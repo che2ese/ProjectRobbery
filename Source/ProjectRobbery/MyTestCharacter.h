@@ -1,3 +1,5 @@
+// MyTestCharacter.h
+
 #pragma once
 
 #include "BasicCharacter.h"
@@ -28,34 +30,41 @@ public:
 
     UFUNCTION()
     bool HasKey(int32 num);
+
+    UFUNCTION()
+    bool HasPoint();
+
     UFUNCTION()
     void UseCamera();
+
     UFUNCTION()
     void UseCoat();
+
+    UFUNCTION()
+    void UseNoise();
 
     UPROPERTY(EditAnywhere)
     TArray<EItemType> Inventory;
 
     UPROPERTY(EditAnywhere)
     TArray<int32> keySet;
-
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
     USoundBase* FootstepSound;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Audio, meta = (AllowPrivateAccess = "true"))
     class UAudioComponent* FootstepAudioComponent;
 
-    FTimerHandle SprintDepletionTimerHandle;    // SprintDepletion Å¸ÀÌ¸Ó ÇÚµé
-    void DepleteRunHealth(float DeltaTime);     // SprintDepletionRate¸¶´Ù RunHealth¸¦ °¨¼Ò½ÃÅ°´Â ÇÔ¼ö
-    void RecoverRunHealth(float DeltaTime);     // SprintRecoveryRate¸¶´Ù RunHealth¸¦ Áõ°¡½ÃÅ°´Â ÇÔ¼ö
+    FTimerHandle SprintDepletionTimerHandle;    // SprintDepletion Å¸ï¿½Ì¸ï¿½ ï¿½Úµï¿½
+    void DepleteRunHealth(float DeltaTime);     // SprintDepletionRateï¿½ï¿½ï¿½ï¿½ RunHealthï¿½ï¿½ ï¿½ï¿½ï¿½Ò½ï¿½Å°ï¿½ï¿½ ï¿½Ô¼ï¿½
+    void RecoverRunHealth(float DeltaTime);     // SprintRecoveryRateï¿½ï¿½ï¿½ï¿½ RunHealthï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å°ï¿½ï¿½ ï¿½Ô¼ï¿½
 
 private:
     void MoveForward(float Value);
     void MoveRight(float Value);
 
+    // Shift Å° ï¿½ï¿½ï¿½ï¿½ ï¿½Ô¼ï¿½
     void StartSprinting();
     void StopSprinting();
-    
     void PlaySoundEvent();
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
@@ -65,7 +74,7 @@ private:
     class UCameraComponent* FollowCamera;
 
     UPROPERTY(EditAnywhere)
-    float RunHealth;    // ¶Ù´Â µ¿¾È »ç¿ëÇÒ Ã¼·Â
+    float RunHealth;    // ï¿½Ù´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ Ã¼ï¿½ï¿½
 
     UPROPERTY(EditAnywhere)
     float SprintDepletionRate;
