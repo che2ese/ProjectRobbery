@@ -2,6 +2,7 @@
 
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/TextBlock.h"
 #include "Engine/Engine.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -15,6 +16,7 @@
 #include "NoiseActor.h"
 #include "DrawDebugHelpers.h"
 #include "ProjectRobberyGameMode.h"
+#include "MainWidget.h"
 
 // Sets default values
 AMyTestCharacter::AMyTestCharacter()
@@ -66,6 +68,12 @@ AMyTestCharacter::AMyTestCharacter()
 void AMyTestCharacter::BeginPlay()
 {
     Super::BeginPlay();
+
+    AGameModeBase* curBase = GetWorld()->GetAuthGameMode();
+    AProjectRobberyGameMode* curGameModeBase = Cast<AProjectRobberyGameMode>(curBase);
+
+    curGameModeBase->mainUI->HealthText->SetText(FText::AsNumber((int)Health));
+    curGameModeBase->mainUI->SteminaText->SetText(FText::AsNumber((int)RunHealth));
 }
 
 
@@ -163,9 +171,15 @@ void AMyTestCharacter::StopSprinting()
 void AMyTestCharacter::ReduceHealth(float Amount)
 {
     Health -= Amount;
+
+    AGameModeBase* curBase = GetWorld()->GetAuthGameMode();
+    AProjectRobberyGameMode* curGameModeBase = Cast<AProjectRobberyGameMode>(curBase);
+    curGameModeBase->mainUI->HealthText->SetText(FText::AsNumber((int)Health));
+
     if (Health <= 0)
     {
-        Destroy();
+        curGameModeBase->ShowGameOverMenu();
+        // Destroy();
     }
     
     if (GEngine)
@@ -252,8 +266,13 @@ void AMyTestCharacter::DepleteRunHealth(float DeltaTime)
     // ü���� 0 ���Ϸ� �������� �� �޸��� ����
     if (RunHealth <= 0)
     {
+        RunHealth = 0;
         StopSprinting();
     }
+
+    AGameModeBase* curBase = GetWorld()->GetAuthGameMode();
+    AProjectRobberyGameMode* curGameModeBase = Cast<AProjectRobberyGameMode>(curBase);
+    curGameModeBase->mainUI->SteminaText->SetText(FText::AsNumber((int)RunHealth));
 }
 
 void AMyTestCharacter::RecoverRunHealth(float DeltaTime)
@@ -265,6 +284,10 @@ void AMyTestCharacter::RecoverRunHealth(float DeltaTime)
     {
         RunHealth = 10.0f;
     }
+
+    AGameModeBase* curBase = GetWorld()->GetAuthGameMode();
+    AProjectRobberyGameMode* curGameModeBase = Cast<AProjectRobberyGameMode>(curBase);
+    curGameModeBase->mainUI->SteminaText->SetText(FText::AsNumber((int)RunHealth));
 }
 
 bool AMyTestCharacter::HasPoint()

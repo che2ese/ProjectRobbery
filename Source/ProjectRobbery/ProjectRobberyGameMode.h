@@ -18,6 +18,15 @@ public:
     UPROPERTY(EditAnywhere)
     TSubclassOf<class UItemUI> ItemWidget;
 
+    UPROPERTY(EditDefaultsOnly)
+    TSubclassOf<class UMainWidget> mainWidget;
+
+    UPROPERTY(EditDefaultsOnly)
+    TSubclassOf<class UGameOverWidget> menuWidget;
+
+    UPROPERTY(EditDefaultsOnly)
+    TSubclassOf<class ULevelClearWidget> nextLevelWidget;
+
     UPROPERTY(EditAnywhere)
     int32 coats = 0;
     UPROPERTY(EditAnywhere)
@@ -32,6 +41,7 @@ public:
     UPROPERTY(EditAnywhere)
     class UItemUI* ItemUI;
 
+    class UMainWidget* mainUI;
 
 protected:
     virtual void BeginPlay() override;
@@ -39,4 +49,8 @@ protected:
 private:
 
     void PrintItems();
+
+public:
+    void ShowGameOverMenu();
+    void ShowClearMenu();
 };
