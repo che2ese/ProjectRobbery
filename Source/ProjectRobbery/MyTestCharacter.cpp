@@ -11,36 +11,38 @@
 #include "Kismet/GameplayStatics.h"
 #include "EngineUtils.h"
 #include "YourAIController.h"
-#include "DrawDebugHelpers.h"
 #include "Camera.h"
+#include "NoiseActor.h"
+#include "DrawDebugHelpers.h"
+#include "ProjectRobberyGameMode.h"
 
 // Sets default values
 AMyTestCharacter::AMyTestCharacter()
 {
-    // CameraBoomÀ» ÃÊ±âÈ­ÇÏ°í RootComponent¿¡ ºÎÂøÇÕ´Ï´Ù.
+    // CameraBoomï¿½ï¿½ ï¿½Ê±ï¿½È­ï¿½Ï°ï¿½ RootComponentï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
     CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
     CameraBoom->SetupAttachment(RootComponent);
     CameraBoom->TargetArmLength = 800.0f;
     CameraBoom->bUsePawnControlRotation = false;
     CameraBoom->bDoCollisionTest = false;
 
-    // Ä«¸Þ¶ó¸¦ Ä³¸¯ÅÍ À§¿¡ À§Ä¡½ÃÅµ´Ï´Ù.
+    // Ä«ï¿½Þ¶ï¿½ Ä³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½Åµï¿½Ï´ï¿½.
     CameraBoom->SetRelativeLocation(FVector(0.0f, 0.0f, 70.0f));
-    CameraBoom->SetRelativeRotation(FRotator(-60.f, 0.f, 0.f));    // -60µµ ÇÇÄ¡·Î Å¾´Ù¿î ºä ¼³Á¤
+    CameraBoom->SetRelativeRotation(FRotator(-60.f, 0.f, 0.f));    // -60ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ Å¾ï¿½Ù¿ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
-    // FollowCamera¸¦ ÃÊ±âÈ­ÇÏ°í CameraBoom¿¡ ºÎÂøÇÕ´Ï´Ù.
+    // FollowCameraï¿½ï¿½ ï¿½Ê±ï¿½È­ï¿½Ï°ï¿½ CameraBoomï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
     FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
     FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
-    FollowCamera->bUsePawnControlRotation = false;    // Ä«¸Þ¶óÀÇ È¸ÀüÀº ÄÁÆ®·Ñ·¯ÀÇ È¸Àü¿¡ ÀÇÁ¸ÇÏÁö ¾ÊÀ½
+    FollowCamera->bUsePawnControlRotation = false;    // Ä«ï¿½Þ¶ï¿½ï¿½ï¿½ È¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Æ®ï¿½Ñ·ï¿½ï¿½ï¿½ È¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
     GetCharacterMovement()->bOrientRotationToMovement = true;
 
     // Initialize health
     Health = 100.0f;
-    RunHealth = 10.0f;    // ¶Ù´Â µ¿¾È »ç¿ëÇÒ Ã¼·Â
+    RunHealth = 10.0f;    // ï¿½Ù´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ Ã¼ï¿½ï¿½
 
-    SprintDepletionRate = 2.0f;    // Shift ´©¸¦ ¶§ ´Þ¸®¸é¼­ ¼Ò¸ðµÇ´Â Ã¼·Â ¼Óµµ
-    SprintRecoveryRate = 1.0f;     // Shift ¶¿ ¶§ Ã¼·ÂÀÌ È¸º¹µÇ´Â ¼Óµµ
+    SprintDepletionRate = 2.0f;    // Shift ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Þ¸ï¿½ï¿½é¼­ ï¿½Ò¸ï¿½Ç´ï¿½ Ã¼ï¿½ï¿½ ï¿½Óµï¿½
+    SprintRecoveryRate = 1.0f;     // Shift ï¿½ï¿½ ï¿½ï¿½ Ã¼ï¿½ï¿½ï¿½ï¿½ È¸ï¿½ï¿½ï¿½Ç´ï¿½ ï¿½Óµï¿½
 
     GetCharacterMovement()->MaxWalkSpeed = 300.0f;
 
@@ -49,10 +51,6 @@ AMyTestCharacter::AMyTestCharacter()
 
     // Initialize sprinting
     bIsSprinting = false;
-
-    FootstepAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("FootstepAudio"));
-    FootstepAudioComponent->SetupAttachment(RootComponent);    // FootstepAudioComponent¸¦ RootComponent¿¡ ºÎÂøÇÕ´Ï´Ù.
-    FootstepAudioComponent->bAutoActivate = false;    // °ÔÀÓ ½ÃÀÛ ½Ã ÀÚµ¿À¸·Î È°¼ºÈ­µÇÁö ¾Êµµ·Ï ¼³Á¤ÇÕ´Ï´Ù.
 }
 
 void AMyTestCharacter::BeginPlay()
@@ -80,21 +78,23 @@ void AMyTestCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-    // ÀÌµ¿ ÇÔ¼öµéÀ» ÀÔ·Â¿¡ ¹ÙÀÎµùÇÕ´Ï´Ù.
+    // ï¿½Ìµï¿½ ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ô·Â¿ï¿½ ï¿½ï¿½ï¿½Îµï¿½ï¿½Õ´Ï´ï¿½.
     PlayerInputComponent->BindAxis("MoveForward", this, &AMyTestCharacter::MoveForward);
     PlayerInputComponent->BindAxis("MoveRight", this, &AMyTestCharacter::MoveRight);
-    // Sprint Å° ÀÔ·Â¿¡ ¹ÙÀÎµùÇÕ´Ï´Ù.
+    // Sprint Å° ï¿½Ô·Â¿ï¿½ ï¿½ï¿½ï¿½Îµï¿½ï¿½Õ´Ï´ï¿½.
     PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AMyTestCharacter::StartSprinting);
     PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AMyTestCharacter::StopSprinting);
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Å°
     PlayerInputComponent->BindAction("E", IE_Pressed, this, &AMyTestCharacter::UseCamera);
     PlayerInputComponent->BindAction("Q", IE_Pressed, this, &AMyTestCharacter::UseCoat);
+    PlayerInputComponent->BindAction("Noise", IE_Pressed, this, &AMyTestCharacter::UseNoise);
 }
 
 void AMyTestCharacter::MoveForward(float Value)
 {
     if ((Controller != nullptr) && (Value != 0.0f))
     {
-        // ÀÔ·Â ¹æÇâÀ» ¾ò½À´Ï´Ù.
+        // ï¿½Ô·ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.
         const FRotator Rotation = Controller->GetControlRotation();
         const FRotator YawRot(0, Rotation.Yaw, 0);
         const FVector Direction = FRotationMatrix(YawRot).GetUnitAxis(EAxis::X);
@@ -106,7 +106,7 @@ void AMyTestCharacter::MoveRight(float Value)
 {
     if ((Controller != nullptr) && (Value != 0.0f))
     {
-        // ÀÔ·Â ¹æÇâÀ» ¾ò½À´Ï´Ù.
+        // ï¿½Ô·ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.
         const FRotator Rotation = Controller->GetControlRotation();
         const FRotator YawRot(0, Rotation.Yaw, 0);
         const FVector Direction = FRotationMatrix(YawRot).GetUnitAxis(EAxis::Y);
@@ -117,20 +117,15 @@ void AMyTestCharacter::StartSprinting()
 {
     if (bIsSprinting || RunHealth <= 0)
     {
-        return;    // ÀÌ¹Ì ´Þ¸®°Å³ª RunHealth°¡ 0 ÀÌÇÏÀÌ¸é ´õ ÀÌ»ó ´Þ¸®Áö ¾ÊÀ½
+        return;    // ï¿½Ì¹ï¿½ ï¿½Þ¸ï¿½ï¿½Å³ï¿½ RunHealthï¿½ï¿½ 0 ï¿½ï¿½ï¿½ï¿½ï¿½Ì¸ï¿½ ï¿½ï¿½ ï¿½Ì»ï¿½ ï¿½Þ¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     }
     bIsSprinting = true;
     GetCharacterMovement()->MaxWalkSpeed = 600.f;
 
-    // Debug ¸Þ½ÃÁö Ãß°¡
+    // Debug ï¿½Þ½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½
     if (GEngine)
     {
         GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Started Sprinting"));
-    }
-    if (FootstepAudioComponent)
-    {
-        FootstepAudioComponent->Play();
-        PlaySoundEvent();
     }
 }
 
@@ -138,7 +133,7 @@ void AMyTestCharacter::StopSprinting()
 {
     if (!bIsSprinting)
     {
-        return;    // ´Þ¸®°í ÀÖÁö ¾ÊÀ¸¸é ¹«½Ã
+        return;    // ï¿½Þ¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     }
 
     bIsSprinting = false;
@@ -163,6 +158,7 @@ void AMyTestCharacter::ReduceHealth(float Amount)
         GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Damage"));
     }
 }
+
 bool AMyTestCharacter::HasKey(int32 num)
 {
     for (int i = 0; i < Inventory.Num(); i++)
@@ -191,40 +187,53 @@ void AMyTestCharacter::UseCamera()
         {
             for (TActorIterator<ACamera> It(GetWorld()); It; ++It)
                 It->enable = false;
+            AGameModeBase* curBase = GetWorld()->GetAuthGameMode();
+            AProjectRobberyGameMode* curGameModeBase = Cast<AProjectRobberyGameMode>(curBase);
+            curGameModeBase->UseItems(Inventory[i]);
+            Inventory[i] = EItemType::Item_None;
+            break;
         }
     }
 }
+
 void AMyTestCharacter::UseCoat()
 {
-    UE_LOG(LogTemp, Log, TEXT("Use Coat"));
     for (int i = 0; i < Inventory.Num(); i++)
     {
         if (Inventory[i] == EItemType::Item_Coat)
         {
             for (TActorIterator<AYourAIController> It(GetWorld()); It; ++It)
                 It->coatActive = true;
+            AGameModeBase* curBase = GetWorld()->GetAuthGameMode();
+            AProjectRobberyGameMode* curGameModeBase = Cast<AProjectRobberyGameMode>(curBase);
+            curGameModeBase->UseItems(Inventory[i]);
+            Inventory[i] = EItemType::Item_None;
+            UE_LOG(LogTemp, Log, TEXT("Use Coat"));
+            break;
         }
     }
 }
+
 void AMyTestCharacter::PlaySoundEvent()
 {
-    // ¼Ò¸® ÀÌº¥Æ®¸¦ »ý¼ºÇÏ°í Àç»ýÇÕ´Ï´Ù.
+    // ï¿½Ò¸ï¿½ ï¿½Ìºï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
     FHitResult HitResult;
     FVector StartLocation = GetActorLocation();
     FVector EndLocation =
-        StartLocation + FVector(100.0f, 0.0f, 0.0f);    // ¿¹½Ã·Î 100 À¯´Ö ¾Õ¿¡ ¼Ò¸® ÀÌº¥Æ®¸¦ »ý¼ºÇÕ´Ï´Ù.
+        StartLocation + FVector(100.0f, 0.0f, 0.0f);    // ï¿½ï¿½ï¿½Ã·ï¿½ 100 ï¿½ï¿½ï¿½ï¿½ ï¿½Õ¿ï¿½ ï¿½Ò¸ï¿½ ï¿½Ìºï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
 
-    // ¼Ò¸® ÀÌº¥Æ® »ý¼º
+    // ï¿½Ò¸ï¿½ ï¿½Ìºï¿½Æ® ï¿½ï¿½ï¿½ï¿½
     MakeNoise(1.0f, this, StartLocation);
 
-    // µð¹ö±×¿ëÀ¸·Î ¶óÀÎÀ» ±×¸³´Ï´Ù.
+    // ï¿½ï¿½ï¿½ï¿½×¿ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½×¸ï¿½ï¿½Ï´ï¿½.
     DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Red, false, 1.0f, 0, 1.0f);
 }
+
 void AMyTestCharacter::DepleteRunHealth(float DeltaTime)
 {
-    RunHealth -= SprintDepletionRate * DeltaTime;    // SprintDepletionRate¸¶´Ù RunHealth¸¦ °¨¼Ò½ÃÅ´
+    RunHealth -= SprintDepletionRate * DeltaTime;    // SprintDepletionRateï¿½ï¿½ï¿½ï¿½ RunHealthï¿½ï¿½ ï¿½ï¿½ï¿½Ò½ï¿½Å´
 
-    // Ã¼·ÂÀÌ 0 ÀÌÇÏ·Î ¶³¾îÁ³À» ¶§ ´Þ¸®±â ÁßÁö
+    // Ã¼ï¿½ï¿½ï¿½ï¿½ 0 ï¿½ï¿½ï¿½Ï·ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Þ¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     if (RunHealth <= 0)
     {
         StopSprinting();
@@ -233,11 +242,44 @@ void AMyTestCharacter::DepleteRunHealth(float DeltaTime)
 
 void AMyTestCharacter::RecoverRunHealth(float DeltaTime)
 {
-    RunHealth += SprintRecoveryRate * DeltaTime;    // SprintRecoveryRate¸¶´Ù RunHealth¸¦ Áõ°¡½ÃÅ´
+    RunHealth += SprintRecoveryRate * DeltaTime;    // SprintRecoveryRateï¿½ï¿½ï¿½ï¿½ RunHealthï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å´
 
-    // ÃÖ´ë RunHealth¸¦ ÃÊ°úÇÏÁö ¾Êµµ·Ï º¸Á¤
-    if (RunHealth > 10.0f)    // ÃÖ´ë RunHealth °ª
+    // ï¿½Ö´ï¿½ RunHealthï¿½ï¿½ ï¿½Ê°ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Êµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    if (RunHealth > 10.0f)    // ï¿½Ö´ï¿½ RunHealth ï¿½ï¿½
     {
         RunHealth = 10.0f;
+    }
+}
+
+bool AMyTestCharacter::HasPoint()
+{
+    for (int i = 0; i < Inventory.Num(); i++)
+    {
+        if (Inventory[i] == EItemType::Item_Point)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void AMyTestCharacter::UseNoise()
+{
+    UE_LOG(LogTemp, Log, TEXT("Use Noise"));
+    for (int i = 0; i < Inventory.Num(); i++)
+    {
+        if (Inventory[i] == EItemType::Item_Noise)
+        {
+            FVector myLoc = GetActorLocation();
+            FRotator myRot = GetActorRotation();
+            FActorSpawnParameters SpawnInfo;
+            ANoiseActor* noise =
+                GetWorld()->SpawnActor<ANoiseActor>(ANoiseActor::StaticClass(), myLoc, myRot, SpawnInfo);
+            AGameModeBase* curBase = GetWorld()->GetAuthGameMode();
+            AProjectRobberyGameMode* curGameModeBase = Cast<AProjectRobberyGameMode>(curBase);
+            curGameModeBase->UseItems(Inventory[i]);
+            Inventory[i] = EItemType::Item_None;
+            break;
+        }
     }
 }
