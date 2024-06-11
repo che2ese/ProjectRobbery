@@ -8,6 +8,7 @@
 #include "Perception/AISenseConfig_Hearing.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
+#include "ProjectRobbery.h"
 
 AYourAIController::AYourAIController()
 {
@@ -35,10 +36,10 @@ AYourAIController::AYourAIController()
     GetPerceptionComponent()->ConfigureSense(*SightConfig);
     GetPerceptionComponent()->ConfigureSense(*HearingConfig);
 
-    // ÀÌº¥Æ®¸¦ ÇÏ³ªÀÇ ÇÔ¼ö·Î µî·Ï
+    // ï¿½Ìºï¿½Æ®ï¿½ï¿½ ï¿½Ï³ï¿½ï¿½ï¿½ ï¿½Ô¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
     GetPerceptionComponent()->OnPerceptionUpdated.AddDynamic(this, &AYourAIController::OnPerceptionUpdated);
 
-    // EnemyCharacter Æ÷ÀÎÅÍ ÃÊ±âÈ­
+    // EnemyCharacter ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½È­
     EnemyCharacter = nullptr;
 }
 
@@ -60,11 +61,11 @@ void AYourAIController::OnPossess(APawn* InPawn)
 {
     Super::OnPossess(InPawn);
 
-    // Ä³¸¯ÅÍ°¡ EnemyCharacter Å¬·¡½ºÀÇ ÀÎ½ºÅÏ½ºÀÎÁö È®ÀÎ
+    // Ä³ï¿½ï¿½ï¿½Í°ï¿½ EnemyCharacter Å¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Î½ï¿½ï¿½Ï½ï¿½ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½
     AEnemyCharacter* TestEnemyCharacter = Cast<AEnemyCharacter>(InPawn);
     if (TestEnemyCharacter != nullptr)
     {
-        // EnemyCharacter Æ÷ÀÎÅÍ ¼³Á¤
+        // EnemyCharacter ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         EnemyCharacter = TestEnemyCharacter;
     }
 }
@@ -103,7 +104,7 @@ void AYourAIController::Tick(float DeltaSeconds)
             {
                 bIsPlayerDetected = false;
                 UE_LOG(LogTemp, Warning, TEXT("Player Lost!"));
-                EnemyCharacter->GetCharacterMovement()->MaxWalkSpeed = 150.f;    // ¼Óµµ ¿ø·¡´ë·Î
+                EnemyCharacter->GetCharacterMovement()->MaxWalkSpeed = 150.f;    // ï¿½Óµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 ReturnToWaypoints();
             }
             else
@@ -127,7 +128,7 @@ void AYourAIController::Tick(float DeltaSeconds)
             {
                 bIsPlayerHearDetected = false;
                 UE_LOG(LogTemp, Warning, TEXT("Player Lost!"));
-                EnemyCharacter->GetCharacterMovement()->MaxWalkSpeed = 150.f;    // ¼Óµµ ¿ø·¡´ë·Î
+                EnemyCharacter->GetCharacterMovement()->MaxWalkSpeed = 150.f;    // ï¿½Óµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 ReturnToWaypoints();
             }
             else
@@ -158,7 +159,7 @@ FRotator AYourAIController::GetControlRotation() const
 
 void AYourAIController::OnPerceptionUpdated(const TArray<AActor*>& DetectedPawns)
 {
-    bool bPreviouslyDetected = bIsPlayerDetected;    // ÀÌÀü¿¡ ÇÃ·¹ÀÌ¾î¸¦ °¨ÁöÇß¾ú´ÂÁö È®ÀÎ
+    bool bPreviouslyDetected = bIsPlayerDetected;    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾î¸¦ ï¿½ï¿½ï¿½ï¿½ï¿½ß¾ï¿½ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½
 
     bIsPlayerDetected = false;
     bIsPlayerHearDetected = false;
@@ -173,7 +174,7 @@ void AYourAIController::OnPerceptionUpdated(const TArray<AActor*>& DetectedPawns
         }
     }
 
-    // ÇÃ·¹ÀÌ¾î¸¦ °¨ÁöÇÏÁö ¸øÇÑ °æ¿ì
+    // ï¿½Ã·ï¿½ï¿½Ì¾î¸¦ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
     if (!bIsPlayerDetected && !bIsPlayerHearDetected && bPreviouslyDetected)
     {
         UE_LOG(LogTemp, Warning, TEXT("Player Lost!"));
@@ -209,9 +210,10 @@ void AYourAIController::ReturnToWaypoints()
 
         FVector CurrentLocation = EnemyCharacter->GetActorLocation();
         float DistanceToWaypoint = FVector::Distance(CurrentLocation, TargetLocation);
+
         if (DistanceToWaypoint < EnemyCharacter->WaypointAcceptanceRadius)
-        {
-            // ´ÙÀ½ ¿þÀÌÆ÷ÀÎÆ®·Î ÀÌµ¿
+        {            
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½Ìµï¿½
             EnemyCharacter->CurrentWaypointIndex =
                 (EnemyCharacter->CurrentWaypointIndex + 1) % EnemyCharacter->Waypoints.Num();
         }
