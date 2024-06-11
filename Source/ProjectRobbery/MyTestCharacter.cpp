@@ -37,6 +37,10 @@ AMyTestCharacter::AMyTestCharacter()
 
     // Initialize health
     Health = 100.0f;
+    RunHealth = 10.0f;    // 뛰는 동안 사용할 체력
+
+    SprintDepletionRate = 2.0f;    // Shift 누를 때 달리면서 소모되는 체력 속도
+    SprintRecoveryRate = 1.0f;     // Shift 뗄 때 체력이 회복되는 속도
 
     GetCharacterMovement()->MaxWalkSpeed = 300.0f;
 
@@ -54,7 +58,6 @@ AMyTestCharacter::AMyTestCharacter()
 void AMyTestCharacter::BeginPlay()
 {
     Super::BeginPlay();
-    GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &AMyTestCharacter::OnOverlapBegin);
 }
 
 
@@ -62,6 +65,14 @@ void AMyTestCharacter::BeginPlay()
 void AMyTestCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+    if (!bIsSprinting)
+    {
+        RecoverRunHealth(DeltaTime);
+    }
+    else
+    {
+        DepleteRunHealth(DeltaTime);
+    }
 }
 
 // Called to bind functionality to input
@@ -104,8 +115,13 @@ void AMyTestCharacter::MoveRight(float Value)
 }
 void AMyTestCharacter::StartSprinting()
 {
+    if (bIsSprinting || RunHealth <= 0)
+    {
+        return;    // 이미 달리거나 RunHealth가 0 이하이면 더 이상 달리지 않음
+    }
     bIsSprinting = true;
     GetCharacterMovement()->MaxWalkSpeed = 600.f;
+
     // Debug 메시지 추가
     if (GEngine)
     {
@@ -120,66 +136,33 @@ void AMyTestCharacter::StartSprinting()
 
 void AMyTestCharacter::StopSprinting()
 {
+    if (!bIsSprinting)
+    {
+        return;    // 달리고 있지 않으면 무시
+    }
+
     bIsSprinting = false;
     GetCharacterMovement()->MaxWalkSpeed = 300.f;
-    if (FootstepAudioComponent->IsPlaying())
+
+    if (FootstepAudioComponent && FootstepAudioComponent->IsPlaying())
     {
         FootstepAudioComponent->Stop();
     }
 }
+
 void AMyTestCharacter::ReduceHealth(float Amount)
 {
     Health -= Amount;
     if (Health <= 0)
     {
-        // Destroy();
-        // Handle player death
+        Destroy();
     }
-    // Print "Damage" message to the screen
-    UE_LOG(LogTemp, Log, TEXT("Attacked! HP is %f"), Health);
+    
     if (GEngine)
     {
         GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Damage"));
     }
 }
-
-void AMyTestCharacter::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp,
-                                      class AActor* OtherActor,
-                                      class UPrimitiveComponent* OtherComp,
-                                      int32 OtherBodyIndex,
-                                      bool bFromSweep,
-                                      const FHitResult& SweepResult)
-{
-    // Check if the overlap event is triggered
-    if (GEngine)
-    {
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Overlap Event Triggered"));
-    }
-
-    if (OtherActor && (OtherActor != this) && OtherComp)
-    {
-        // Print name of the overlapping actor for debugging
-        if (GEngine)
-        {
-            GEngine->AddOnScreenDebugMessage(-1,
-                                             5.f,
-                                             FColor::Yellow,
-                                             FString::Printf(TEXT("Overlapping with: %s"), *OtherActor->GetName()));
-        }
-
-        // Check if the overlapping actor is the enemy
-        if (OtherActor->ActorHasTag("Enemy"))
-        {
-            ReduceHealth(10.0f);
-
-            if (GEngine)
-            {
-                GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Overlap with Enemy"));
-            }
-        }
-    }
-}
-
 bool AMyTestCharacter::HasKey(int32 num)
 {
     for (int i = 0; i < Inventory.Num(); i++)
@@ -236,4 +219,25 @@ void AMyTestCharacter::PlaySoundEvent()
 
     // 디버그용으로 라인을 그립니다.
     DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Red, false, 1.0f, 0, 1.0f);
+}
+void AMyTestCharacter::DepleteRunHealth(float DeltaTime)
+{
+    RunHealth -= SprintDepletionRate * DeltaTime;    // SprintDepletionRate마다 RunHealth를 감소시킴
+
+    // 체력이 0 이하로 떨어졌을 때 달리기 중지
+    if (RunHealth <= 0)
+    {
+        StopSprinting();
+    }
+}
+
+void AMyTestCharacter::RecoverRunHealth(float DeltaTime)
+{
+    RunHealth += SprintRecoveryRate * DeltaTime;    // SprintRecoveryRate마다 RunHealth를 증가시킴
+
+    // 최대 RunHealth를 초과하지 않도록 보정
+    if (RunHealth > 10.0f)    // 최대 RunHealth 값
+    {
+        RunHealth = 10.0f;
+    }
 }
