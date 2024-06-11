@@ -25,6 +25,9 @@ public:
     class UBoxComponent* doorCollisionComp;
 
     UPROPERTY(EditAnywhere)
+    bool bLocked = false;
+
+    UPROPERTY(EditAnywhere)
     int32 doorNum = 0;
 
     UFUNCTION()
