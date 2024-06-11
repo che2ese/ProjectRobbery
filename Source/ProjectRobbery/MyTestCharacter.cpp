@@ -51,6 +51,10 @@ AMyTestCharacter::AMyTestCharacter()
 
     // Initialize sprinting
     bIsSprinting = false;
+
+    FootstepAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("FootstepAudio"));
+    FootstepAudioComponent->SetupAttachment(RootComponent);    // FootstepAudioComponent�� RootComponent�� �����մϴ�.
+    FootstepAudioComponent->bAutoActivate = false;    // ���� ���� �� �ڵ����� Ȱ��ȭ���� �ʵ��� �����մϴ�.
 }
 
 void AMyTestCharacter::BeginPlay()
@@ -127,6 +131,12 @@ void AMyTestCharacter::StartSprinting()
     {
         GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Started Sprinting"));
     }
+
+    if (FootstepAudioComponent)
+    {
+        FootstepAudioComponent->Play();
+        PlaySoundEvent();
+    }
 }
 
 void AMyTestCharacter::StopSprinting()
@@ -198,6 +208,7 @@ void AMyTestCharacter::UseCamera()
 
 void AMyTestCharacter::UseCoat()
 {
+    UE_LOG(LogTemp, Log, TEXT("Use Coat"));
     for (int i = 0; i < Inventory.Num(); i++)
     {
         if (Inventory[i] == EItemType::Item_Coat)
