@@ -19,26 +19,30 @@
 // Sets default values
 AMyTestCharacter::AMyTestCharacter()
 {
-    // CameraBoomÀ» ÃÊ±âÈ­ÇÏ°í RootComponent¿¡ ºÎÂøÇÕ´Ï´Ù.
+    // CameraBoomï¿½ï¿½ ï¿½Ê±ï¿½È­ï¿½Ï°ï¿½ RootComponentï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
     CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
     CameraBoom->SetupAttachment(RootComponent);
     CameraBoom->TargetArmLength = 800.0f;
     CameraBoom->bUsePawnControlRotation = false;
     CameraBoom->bDoCollisionTest = false;
 
-    // Ä«¸Þ¶ó¸¦ Ä³¸¯ÅÍ À§¿¡ À§Ä¡½ÃÅµ´Ï´Ù.
+    // Ä«ï¿½Þ¶ï¿½ Ä³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½Åµï¿½Ï´ï¿½.
     CameraBoom->SetRelativeLocation(FVector(0.0f, 0.0f, 70.0f));
-    CameraBoom->SetRelativeRotation(FRotator(-60.f, 0.f, 0.f));    // -60µµ ÇÇÄ¡·Î Å¾´Ù¿î ºä ¼³Á¤
+    CameraBoom->SetRelativeRotation(FRotator(-60.f, 0.f, 0.f));    // -60ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ Å¾ï¿½Ù¿ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
-    // FollowCamera¸¦ ÃÊ±âÈ­ÇÏ°í CameraBoom¿¡ ºÎÂøÇÕ´Ï´Ù.
+    // FollowCameraï¿½ï¿½ ï¿½Ê±ï¿½È­ï¿½Ï°ï¿½ CameraBoomï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
     FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
     FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
-    FollowCamera->bUsePawnControlRotation = false;    // Ä«¸Þ¶óÀÇ È¸ÀüÀº ÄÁÆ®·Ñ·¯ÀÇ È¸Àü¿¡ ÀÇÁ¸ÇÏÁö ¾ÊÀ½
+    FollowCamera->bUsePawnControlRotation = false;    // Ä«ï¿½Þ¶ï¿½ï¿½ï¿½ È¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Æ®ï¿½Ñ·ï¿½ï¿½ï¿½ È¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
     GetCharacterMovement()->bOrientRotationToMovement = true;
 
     // Initialize health
     Health = 100.0f;
+    RunHealth = 10.0f;    // ï¿½Ù´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ Ã¼ï¿½ï¿½
+
+    SprintDepletionRate = 2.0f;    // Shift ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Þ¸ï¿½ï¿½é¼­ ï¿½Ò¸ï¿½Ç´ï¿½ Ã¼ï¿½ï¿½ ï¿½Óµï¿½
+    SprintRecoveryRate = 1.0f;     // Shift ï¿½ï¿½ ï¿½ï¿½ Ã¼ï¿½ï¿½ï¿½ï¿½ È¸ï¿½ï¿½ï¿½Ç´ï¿½ ï¿½Óµï¿½
 
     GetCharacterMovement()->MaxWalkSpeed = 300.0f;
 
@@ -52,7 +56,6 @@ AMyTestCharacter::AMyTestCharacter()
 void AMyTestCharacter::BeginPlay()
 {
     Super::BeginPlay();
-    GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &AMyTestCharacter::OnOverlapBegin);
 }
 
 
@@ -60,6 +63,14 @@ void AMyTestCharacter::BeginPlay()
 void AMyTestCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+    if (!bIsSprinting)
+    {
+        RecoverRunHealth(DeltaTime);
+    }
+    else
+    {
+        DepleteRunHealth(DeltaTime);
+    }
 }
 
 // Called to bind functionality to input
@@ -67,13 +78,13 @@ void AMyTestCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-    // ÀÌµ¿ ÇÔ¼öµéÀ» ÀÔ·Â¿¡ ¹ÙÀÎµùÇÕ´Ï´Ù.
+    // ï¿½Ìµï¿½ ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ô·Â¿ï¿½ ï¿½ï¿½ï¿½Îµï¿½ï¿½Õ´Ï´ï¿½.
     PlayerInputComponent->BindAxis("MoveForward", this, &AMyTestCharacter::MoveForward);
     PlayerInputComponent->BindAxis("MoveRight", this, &AMyTestCharacter::MoveRight);
-    // Sprint Å° ÀÔ·Â¿¡ ¹ÙÀÎµùÇÕ´Ï´Ù.
+    // Sprint Å° ï¿½Ô·Â¿ï¿½ ï¿½ï¿½ï¿½Îµï¿½ï¿½Õ´Ï´ï¿½.
     PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AMyTestCharacter::StartSprinting);
     PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AMyTestCharacter::StopSprinting);
-    // ¾ÆÀÌÅÛ »ç¿ëÅ°
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Å°
     PlayerInputComponent->BindAction("E", IE_Pressed, this, &AMyTestCharacter::UseCamera);
     PlayerInputComponent->BindAction("Q", IE_Pressed, this, &AMyTestCharacter::UseCoat);
     PlayerInputComponent->BindAction("Noise", IE_Pressed, this, &AMyTestCharacter::UseNoise);
@@ -83,7 +94,7 @@ void AMyTestCharacter::MoveForward(float Value)
 {
     if ((Controller != nullptr) && (Value != 0.0f))
     {
-        // ÀÔ·Â ¹æÇâÀ» ¾ò½À´Ï´Ù.
+        // ï¿½Ô·ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.
         const FRotator Rotation = Controller->GetControlRotation();
         const FRotator YawRot(0, Rotation.Yaw, 0);
         const FVector Direction = FRotationMatrix(YawRot).GetUnitAxis(EAxis::X);
@@ -95,7 +106,7 @@ void AMyTestCharacter::MoveRight(float Value)
 {
     if ((Controller != nullptr) && (Value != 0.0f))
     {
-        // ÀÔ·Â ¹æÇâÀ» ¾ò½À´Ï´Ù.
+        // ï¿½Ô·ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.
         const FRotator Rotation = Controller->GetControlRotation();
         const FRotator YawRot(0, Rotation.Yaw, 0);
         const FVector Direction = FRotationMatrix(YawRot).GetUnitAxis(EAxis::Y);
@@ -104,9 +115,14 @@ void AMyTestCharacter::MoveRight(float Value)
 }
 void AMyTestCharacter::StartSprinting()
 {
+    if (bIsSprinting || RunHealth <= 0)
+    {
+        return;    // ï¿½Ì¹ï¿½ ï¿½Þ¸ï¿½ï¿½Å³ï¿½ RunHealthï¿½ï¿½ 0 ï¿½ï¿½ï¿½ï¿½ï¿½Ì¸ï¿½ ï¿½ï¿½ ï¿½Ì»ï¿½ ï¿½Þ¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    }
     bIsSprinting = true;
     GetCharacterMovement()->MaxWalkSpeed = 600.f;
-    // Debug ¸Þ½ÃÁö Ãß°¡
+
+    // Debug ï¿½Þ½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½
     if (GEngine)
     {
         GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Started Sprinting"));
@@ -115,62 +131,33 @@ void AMyTestCharacter::StartSprinting()
 
 void AMyTestCharacter::StopSprinting()
 {
+    if (!bIsSprinting)
+    {
+        return;    // ï¿½Þ¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    }
+
     bIsSprinting = false;
     GetCharacterMovement()->MaxWalkSpeed = 300.f;
+
+    if (FootstepAudioComponent && FootstepAudioComponent->IsPlaying())
+    {
+        FootstepAudioComponent->Stop();
+    }
 }
+
 void AMyTestCharacter::ReduceHealth(float Amount)
 {
     Health -= Amount;
     if (Health <= 0)
     {
-        // Destroy();
-        // Handle player death
+        Destroy();
     }
-    // Print "Damage" message to the screen
-    UE_LOG(LogTemp, Log, TEXT("Attacked! HP is %f"), Health);
+    
     if (GEngine)
     {
         GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Damage"));
     }
 }
-
-void AMyTestCharacter::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp,
-                                      class AActor* OtherActor,
-                                      class UPrimitiveComponent* OtherComp,
-                                      int32 OtherBodyIndex,
-                                      bool bFromSweep,
-                                      const FHitResult& SweepResult)
-{
-    // Check if the overlap event is triggered
-    if (GEngine)
-    {
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Overlap Event Triggered"));
-    }
-
-    if (OtherActor && (OtherActor != this) && OtherComp)
-    {
-        // Print name of the overlapping actor for debugging
-        if (GEngine)
-        {
-            GEngine->AddOnScreenDebugMessage(-1,
-                                             5.f,
-                                             FColor::Yellow,
-                                             FString::Printf(TEXT("Overlapping with: %s"), *OtherActor->GetName()));
-        }
-
-        // Check if the overlapping actor is the enemy
-        if (OtherActor->ActorHasTag("Enemy"))
-        {
-            ReduceHealth(10.0f);
-
-            if (GEngine)
-            {
-                GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Overlap with Enemy"));
-            }
-        }
-    }
-}
-
 bool AMyTestCharacter::HasKey(int32 num)
 {
     for (int i = 0; i < Inventory.Num(); i++)
@@ -227,17 +214,38 @@ void AMyTestCharacter::UseCoat()
 }
 void AMyTestCharacter::PlaySoundEvent()
 {
-    // ¼Ò¸® ÀÌº¥Æ®¸¦ »ý¼ºÇÏ°í Àç»ýÇÕ´Ï´Ù.
+    // ï¿½Ò¸ï¿½ ï¿½Ìºï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
     FHitResult HitResult;
     FVector StartLocation = GetActorLocation();
     FVector EndLocation =
-        StartLocation + FVector(100.0f, 0.0f, 0.0f);    // ¿¹½Ã·Î 100 À¯´Ö ¾Õ¿¡ ¼Ò¸® ÀÌº¥Æ®¸¦ »ý¼ºÇÕ´Ï´Ù.
+        StartLocation + FVector(100.0f, 0.0f, 0.0f);    // ï¿½ï¿½ï¿½Ã·ï¿½ 100 ï¿½ï¿½ï¿½ï¿½ ï¿½Õ¿ï¿½ ï¿½Ò¸ï¿½ ï¿½Ìºï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
 
-    // ¼Ò¸® ÀÌº¥Æ® »ý¼º
+    // ï¿½Ò¸ï¿½ ï¿½Ìºï¿½Æ® ï¿½ï¿½ï¿½ï¿½
     MakeNoise(1.0f, this, StartLocation);
 
-    // µð¹ö±×¿ëÀ¸·Î ¶óÀÎÀ» ±×¸³´Ï´Ù.
+    // ï¿½ï¿½ï¿½ï¿½×¿ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½×¸ï¿½ï¿½Ï´ï¿½.
     DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Red, false, 1.0f, 0, 1.0f);
+}
+void AMyTestCharacter::DepleteRunHealth(float DeltaTime)
+{
+    RunHealth -= SprintDepletionRate * DeltaTime;    // SprintDepletionRateï¿½ï¿½ï¿½ï¿½ RunHealthï¿½ï¿½ ï¿½ï¿½ï¿½Ò½ï¿½Å´
+
+    // Ã¼ï¿½ï¿½ï¿½ï¿½ 0 ï¿½ï¿½ï¿½Ï·ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Þ¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    if (RunHealth <= 0)
+    {
+        StopSprinting();
+    }
+}
+
+void AMyTestCharacter::RecoverRunHealth(float DeltaTime)
+{
+    RunHealth += SprintRecoveryRate * DeltaTime;    // SprintRecoveryRateï¿½ï¿½ï¿½ï¿½ RunHealthï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å´
+
+    // ï¿½Ö´ï¿½ RunHealthï¿½ï¿½ ï¿½Ê°ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Êµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    if (RunHealth > 10.0f)    // ï¿½Ö´ï¿½ RunHealth ï¿½ï¿½
+    {
+        RunHealth = 10.0f;
+    }
 }
 
 bool AMyTestCharacter::HasPoint()

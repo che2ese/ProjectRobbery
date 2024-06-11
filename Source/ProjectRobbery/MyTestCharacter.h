@@ -5,7 +5,9 @@
 #include "BasicCharacter.h"
 #include "CoreMinimal.h"
 #include "ItemBase.h"
-
+#include "Sound/SoundBase.h"
+#include "Components/AudioComponent.h"
+#include "EnemyCharacter.h" 
 #include "MyTestCharacter.generated.h"
 
 UCLASS()
@@ -60,11 +62,15 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Audio, meta = (AllowPrivateAccess = "true"))
     class UAudioComponent* FootstepAudioComponent;
 
+    FTimerHandle SprintDepletionTimerHandle;    // SprintDepletion Ÿ�̸� �ڵ�
+    void DepleteRunHealth(float DeltaTime);     // SprintDepletionRate���� RunHealth�� ���ҽ�Ű�� �Լ�
+    void RecoverRunHealth(float DeltaTime);     // SprintRecoveryRate���� RunHealth�� ������Ű�� �Լ�
+
 private:
     void MoveForward(float Value);
     void MoveRight(float Value);
 
-    // Shift Ű ���� �Լ�
+    // Shift Ű ���� �Լ�
     void StartSprinting();
     void StopSprinting();
     void PlaySoundEvent();
@@ -75,6 +81,14 @@ private:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
     class UCameraComponent* FollowCamera;
 
+    UPROPERTY(EditAnywhere)
+    float RunHealth;    // �ٴ� ���� ����� ü��
+
+    UPROPERTY(EditAnywhere)
+    float SprintDepletionRate;
+
+    UPROPERTY(EditAnywhere)
+    float SprintRecoveryRate;
 
     bool bIsSprinting;
 };

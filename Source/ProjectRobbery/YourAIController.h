@@ -27,7 +27,7 @@ public:
 
 
     UFUNCTION()
-    void OnPerceptionUpdated(const TArray<AActor*>& DetectedPawns);
+    virtual void OnPerceptionUpdated(const TArray<AActor*>& DetectedPawns);
 
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = AI)
     float AISightRadius = 450.f;
