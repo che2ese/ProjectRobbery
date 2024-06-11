@@ -3,6 +3,7 @@
 
 #include "ExitGoal.h"
 #include "../MyTestCharacter.h"
+#include "../ProjectRobberyGameMode.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 
@@ -46,6 +47,8 @@ void AExitGoal::OnPlayerOverlap(UPrimitiveComponent* OverlappedComponent,
     if (player != nullptr && player->HasPoint())
     {
         UE_LOG(LogTemp, Log, TEXT("Clear Stage"));
-        //클리어 창 띄우기
+        AGameModeBase* curBase = GetWorld()->GetAuthGameMode();
+        AProjectRobberyGameMode* curGameModeBase = Cast<AProjectRobberyGameMode>(curBase);
+        curGameModeBase->ShowClearMenu();
     }
 }

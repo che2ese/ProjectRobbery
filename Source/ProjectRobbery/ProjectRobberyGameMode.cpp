@@ -2,11 +2,16 @@
 
 #include "ProjectRobberyGameMode.h"
 
+#include "ProjectRobbery.h"
 #include "ProjectRobberyCharacter.h"
 #include "ProjectRobberyPlayerController.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Components/TextBlock.h"
 #include "ItemUI.h"
+#include "MainWidget.h"
+#include "LevelClearWidget.h"
+#include "GameOverWidget.h"
+#include "Kismet/GameplayStatics.h"
 
 AProjectRobberyGameMode::AProjectRobberyGameMode()
 {
@@ -32,6 +37,16 @@ void AProjectRobberyGameMode::BeginPlay()
         if (ItemUI != nullptr)
             ItemUI->AddToViewport();
     }
+
+    if (IsValid(mainWidget))
+    {
+        mainUI = CreateWidget<UMainWidget>(GetWorld(), mainWidget);
+        if (IsValid(mainUI))
+        {
+            mainUI->AddToViewport();
+        }
+    }
+
     PrintItems();
 }
 
@@ -67,4 +82,46 @@ void AProjectRobberyGameMode::UseItems(EItemType Item)
         cameras--;
 
     PrintItems();
+}
+
+void AProjectRobberyGameMode::ShowGameOverMenu()
+{
+    if (menuWidget == nullptr)
+    {
+        FMT_ERROR(TEXT("Menu widget is null"));
+        return;
+    }
+
+    auto *menuUI = CreateWidget<UGameOverWidget>(GetWorld(), menuWidget);
+    if (!IsValid(menuUI))
+    {
+        FMT_ERROR(TEXT("Unable to create menuUI"));
+        return;
+    }
+
+    menuUI->AddToViewport();
+
+    UGameplayStatics::SetGamePaused(GetWorld(), true);
+    // GetWorld()->GetFirstPlayerController()->SetShowMouseCursor(true);
+}
+
+void AProjectRobberyGameMode::ShowClearMenu()
+{
+    if (nextLevelWidget == nullptr)
+    {
+        FMT_ERROR(TEXT("Next level widget is null"));
+        return;
+    }
+
+    auto *nextLevelUI = CreateWidget<ULevelClearWidget>(GetWorld(), nextLevelWidget);
+    if (!IsValid(nextLevelUI))
+    {
+        FMT_ERROR(TEXT("Unable to create nextLevelUI"));
+        return;
+    }
+
+    nextLevelUI->AddToViewport();
+
+    UGameplayStatics::SetGamePaused(GetWorld(), true);
+    // GetWorld()->GetFirstPlayerController()->SetShowMouseCursor(true);
 }
