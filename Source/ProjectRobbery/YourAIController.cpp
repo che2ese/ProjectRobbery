@@ -1,32 +1,42 @@
 #include "YourAIController.h"
 
-#include "MyTestCharacter.h"
-#include "Perception/AIPerceptionComponent.h"
-#include "Perception/AISenseConfig_Sight.h"
-#include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
+#include "Camera.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "Camera.h"
+#include "MyTestCharacter.h"
+#include "Perception/AIPerceptionComponent.h"
+#include "Perception/AISenseConfig_Hearing.h"
+#include "Perception/AISenseConfig_Sight.h"
+#include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 
 AYourAIController::AYourAIController()
 {
     PrimaryActorTick.bCanEverTick = true;
 
     SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("Sight Config"));
+    HearingConfig = CreateDefaultSubobject<UAISenseConfig_Hearing>(TEXT("Hearing Config"));
     SetPerceptionComponent(*CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("Perception Component")));
 
     SightConfig->SightRadius = AISightRadius;
     SightConfig->LoseSightRadius = AILoseSightRadius;
     SightConfig->PeripheralVisionAngleDegrees = AIFieldOfView;
     SightConfig->SetMaxAge(AISightAge);
+    HearingConfig->HearingRange = AIHearingRange;
 
     SightConfig->DetectionByAffiliation.bDetectEnemies = true;
     SightConfig->DetectionByAffiliation.bDetectFriendlies = true;
     SightConfig->DetectionByAffiliation.bDetectNeutrals = true;
 
+    HearingConfig->DetectionByAffiliation.bDetectEnemies = true;
+    HearingConfig->DetectionByAffiliation.bDetectFriendlies = true;
+    HearingConfig->DetectionByAffiliation.bDetectNeutrals = true;
+
     GetPerceptionComponent()->SetDominantSense(*SightConfig->GetSenseImplementation());
-    GetPerceptionComponent()->OnPerceptionUpdated.AddDynamic(this, &AYourAIController::OnPawnDetected);
     GetPerceptionComponent()->ConfigureSense(*SightConfig);
+    GetPerceptionComponent()->ConfigureSense(*HearingConfig);
+
+    // 이벤트를 하나의 함수로 등록
+    GetPerceptionComponent()->OnPerceptionUpdated.AddDynamic(this, &AYourAIController::OnPerceptionUpdated);
 
     // EnemyCharacter 포인터 초기화
     EnemyCharacter = nullptr;
@@ -77,14 +87,13 @@ void AYourAIController::Tick(float DeltaSeconds)
     {
         MoveToActor(camera, 2.0f);
         float distanceToCamera = GetPawn()->GetDistanceTo(camera);
-        if (distanceToCamera <= 100 || (bIsPlayerDetected && !coatActive))
+        if (distanceToCamera <= 100 || (bIsPlayerDetected && bIsPlayerHearDetected && !coatActive))
         {
             cameraActive = false;
             UE_LOG(LogTemp, Warning, TEXT("Shut down camera"));
         }
     }
-
-    else if (bIsPlayerDetected && !coatActive)
+    if (bIsPlayerDetected && !coatActive)
     {
         AMyTestCharacter* Player = Cast<AMyTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
         if (Player)
@@ -99,6 +108,33 @@ void AYourAIController::Tick(float DeltaSeconds)
             }
             else
             {
+                if (DistanceToPlayer < 30.f)
+                {
+                    Player->ReduceHealth(2 * DeltaSeconds);
+                    UE_LOG(LogTemp, Warning, TEXT("Damage"));
+                }
+                UE_LOG(LogTemp, Log, TEXT("SEE"));
+                EnemyCharacter->GetCharacterMovement()->MaxWalkSpeed = 300.f;
+                MoveToActor(Player, 2.0f);
+            }
+        }
+    }
+    else if (bIsPlayerHearDetected && !coatActive)
+    {
+        AMyTestCharacter* Player = Cast<AMyTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+        if (Player)
+        {
+            DistanceToPlayer = FVector::Dist(Player->GetActorLocation(), EnemyCharacter->GetActorLocation());
+            if (DistanceToPlayer > AIHearingRange)
+            {
+                bIsPlayerHearDetected = false;
+                UE_LOG(LogTemp, Warning, TEXT("Player Lost!"));
+                EnemyCharacter->GetCharacterMovement()->MaxWalkSpeed = 150.f;    // 속도 원래대로
+                ReturnToWaypoints();
+            }
+            else
+            {
+                UE_LOG(LogTemp, Log, TEXT("HEAR"));
                 EnemyCharacter->GetCharacterMovement()->MaxWalkSpeed = 300.f;
                 MoveToActor(Player, 2.0f);
             }
@@ -114,7 +150,6 @@ void AYourAIController::Tick(float DeltaSeconds)
     }
 }
 
-
 FRotator AYourAIController::GetControlRotation() const
 {
     if (GetPawn() == nullptr)
@@ -124,28 +159,41 @@ FRotator AYourAIController::GetControlRotation() const
     return FRotator(0.f, GetPawn()->GetActorRotation().Yaw, 0.f);
 }
 
-void AYourAIController::OnPawnDetected(const TArray<AActor*>& DetectedPawns)
+void AYourAIController::OnPerceptionUpdated(const TArray<AActor*>& DetectedPawns)
 {
     bool bPreviouslyDetected = bIsPlayerDetected;    // 이전에 플레이어를 감지했었는지 확인
 
-    bIsPlayerDetected = false;    // 초기화
+    bIsPlayerDetected = false;
+    bIsPlayerHearDetected = false;
 
     for (AActor* DetectedPawn : DetectedPawns)
     {
         if (DetectedPawn->IsA<AMyTestCharacter>())
         {
             bIsPlayerDetected = true;
-            break;    // 플레이어를 감지했으므로 루프 종료
+            bIsPlayerHearDetected = true;
+            break;
         }
     }
 
     // 플레이어를 감지하지 못한 경우
-    if (!bIsPlayerDetected && bPreviouslyDetected)
+    if (!bIsPlayerDetected && !bIsPlayerHearDetected && bPreviouslyDetected)
     {
         UE_LOG(LogTemp, Warning, TEXT("Player Lost!"));
         if (EnemyCharacter != nullptr)
         {
             ReturnToWaypoints();
+        }
+    }
+    else
+    {
+        if (bIsPlayerDetected)
+        {
+            UE_LOG(LogTemp, Log, TEXT("Player Seen!"));
+        }
+        if (bIsPlayerHearDetected)
+        {
+            UE_LOG(LogTemp, Log, TEXT("Player Heard!"));
         }
     }
 }
