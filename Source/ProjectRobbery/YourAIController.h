@@ -3,7 +3,7 @@
 #include "AIController.h"
 #include "CoreMinimal.h"
 #include "EnemyCharacter.h"
-
+#include "Camera.h"
 #include "YourAIController.generated.h"
 
 class UBehaviorTreeComponent;

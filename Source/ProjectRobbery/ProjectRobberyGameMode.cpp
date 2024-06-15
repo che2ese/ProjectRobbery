@@ -30,6 +30,25 @@ AProjectRobberyGameMode::AProjectRobberyGameMode()
 void AProjectRobberyGameMode::BeginPlay()
 {
     Super::BeginPlay();
+    TArray<AActor*> FoundActors;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), AExitGoal::StaticClass(), FoundActors);
+     
+    if (FoundActors.Num() > 0)
+    {
+        AExitGoal* FoundExitGoal = Cast<AExitGoal>(FoundActors[0]);
+        if (FoundExitGoal)
+        {
+            points = FoundExitGoal->RequiredPoint;
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("FoundExitGoal is nullptr"));
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No AExitGoal found in the level"));
+    }
 
     if (ItemWidget != nullptr)
     {
@@ -57,6 +76,7 @@ void AProjectRobberyGameMode::PrintItems()
         ItemUI->countCoat->SetText(FText::AsNumber(coats));
         ItemUI->countNoise->SetText(FText::AsNumber(noises));
         ItemUI->countCamera->SetText(FText::AsNumber(cameras));
+        ItemUI->countPoint->SetText(FText::AsNumber(points));
     }
 }
 
@@ -68,6 +88,8 @@ void AProjectRobberyGameMode::AddItems(EItemType Item)
         coats++;
     if (Item == EItemType::Item_Camera)
         cameras++;
+    if (Item == EItemType::Item_Point)
+        points--;
     
     PrintItems();
 }

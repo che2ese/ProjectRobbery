@@ -44,7 +44,7 @@ void AExitGoal::OnPlayerOverlap(UPrimitiveComponent* OverlappedComponent,
                                 const FHitResult& SweepResult)
 {
     AMyTestCharacter* player = Cast<AMyTestCharacter>(OtherActor);
-    if (player != nullptr && player->HasPoint())
+    if (player != nullptr && player->GetPoint() > 0 && player->GetPoint() >= RequiredPoint)
     {
         UE_LOG(LogTemp, Log, TEXT("Clear Stage"));
         AGameModeBase* curBase = GetWorld()->GetAuthGameMode();

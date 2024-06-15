@@ -54,6 +54,8 @@ AMyTestCharacter::AMyTestCharacter()
     // Initialize sprinting
     bIsSprinting = false;
 
+    noiseActive = false;
+
     FootstepAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("FootstepAudio"));
     FootstepAudioComponent->SetupAttachment(RootComponent);    // FootstepAudioComponent를 RootComponent에 부착합니다.
     FootstepAudioComponent->bAutoActivate = false;    // 게임 시작 시 자동으로 활성화되지 않도록 설정합니다.
@@ -63,6 +65,13 @@ AMyTestCharacter::AMyTestCharacter()
     DogAudioComponent->SetupAttachment(RootComponent);    // FootstepAudioComponent를 RootComponent에 부착합니다.
     DogAudioComponent->bAutoActivate = false;    // 게임 시작 시 자동으로 활성화되지 않도록 설정합니다.
     DogAudioComponent->bAutoDestroy = false;    // 게임 시작 시 자동으로 활성화되지 않도록 설정합니다.
+
+    NoiseAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("NoiseSound"));
+    NoiseAudioComponent->SetupAttachment(RootComponent);    // FootstepAudioComponent를 RootComponent에 부착합니다.
+    NoiseAudioComponent->bAutoActivate = false;    // 게임 시작 시 자동으로 활성화되지 않도록 설정합니다.
+    NoiseAudioComponent->bAutoDestroy = false;    // 게임 시작 시 자동으로 활성화되지 않도록 설정합니다.
+
+    point = 0;
 }
 
 void AMyTestCharacter::BeginPlay()
@@ -105,7 +114,7 @@ void AMyTestCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
     // ������ ���Ű
     PlayerInputComponent->BindAction("E", IE_Pressed, this, &AMyTestCharacter::UseCamera);
     PlayerInputComponent->BindAction("Q", IE_Pressed, this, &AMyTestCharacter::UseCoat);
-    PlayerInputComponent->BindAction("Noise", IE_Pressed, this, &AMyTestCharacter::UseNoise);
+    PlayerInputComponent->BindAction("T", IE_Pressed, this, &AMyTestCharacter::UseNoise);
 }
 
 void AMyTestCharacter::MoveForward(float Value)
@@ -124,7 +133,6 @@ void AMyTestCharacter::MoveRight(float Value)
 {
     if ((Controller != nullptr) && (Value != 0.0f))
     {
-        // �Է� ������ ����ϴ�.
         const FRotator Rotation = Controller->GetControlRotation();
         const FRotator YawRot(0, Rotation.Yaw, 0);
         const FVector Direction = FRotationMatrix(YawRot).GetUnitAxis(EAxis::Y);
@@ -139,12 +147,6 @@ void AMyTestCharacter::StartSprinting()
     }
     bIsSprinting = true;
     GetCharacterMovement()->MaxWalkSpeed = 600.f;
-
-    // Debug 메시지 추가
-    if (GEngine)
-    {
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Started Sprinting"));
-    }
     if (FootstepAudioComponent)
     {
         FootstepAudioComponent->Play();
@@ -180,11 +182,6 @@ void AMyTestCharacter::ReduceHealth(float Amount)
     {
         curGameModeBase->ShowGameOverMenu();
         // Destroy();
-    }
-    
-    if (GEngine)
-    {
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Damage"));
     }
 }
 
@@ -243,27 +240,54 @@ void AMyTestCharacter::UseCoat()
         }
     }
 }
+void AMyTestCharacter::UseNoise()
+{
+    UE_LOG(LogTemp, Log, TEXT("Use Noise"));
+    for (int i = 0; i < Inventory.Num(); i++)
+    {
+        if (Inventory[i] == EItemType::Item_Noise)
+        {
+            noiseActive = true;
 
+            // NoiseActor 활성화 시 오디오 출력
+            if (noiseActive)
+            {
+                if (NoiseAudioComponent)
+                {
+                    NoiseAudioComponent->Play();
+                }
+            }
+            FVector myLoc = GetActorLocation();
+            FRotator myRot = GetActorRotation();
+            FActorSpawnParameters SpawnInfo;
+            ANoiseActor* noise =
+                GetWorld()->SpawnActor<ANoiseActor>(ANoiseActor::StaticClass(), myLoc, myRot, SpawnInfo);
+
+            AGameModeBase* curBase = GetWorld()->GetAuthGameMode();
+            AProjectRobberyGameMode* curGameModeBase = Cast<AProjectRobberyGameMode>(curBase);
+            curGameModeBase->UseItems(Inventory[i]);
+            Inventory[i] = EItemType::Item_None;
+            UE_LOG(LogTemp, Log, TEXT("Use Noise"));
+            break;
+        }
+    }
+}
 void AMyTestCharacter::PlaySoundEvent()
 {
-    // �Ҹ� �̺�Ʈ�� �����ϰ� ����մϴ�.
     FHitResult HitResult;
     FVector StartLocation = GetActorLocation();
     FVector EndLocation =
-        StartLocation + FVector(100.0f, 0.0f, 0.0f);    // ���÷� 100 ���� �տ� �Ҹ� �̺�Ʈ�� �����մϴ�.
+        StartLocation + FVector(100.0f, 0.0f, 0.0f);
 
-    // �Ҹ� �̺�Ʈ ����
     MakeNoise(1.0f, this, StartLocation);
 
-    // ����׿����� ������ �׸��ϴ�.
     DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Red, false, 1.0f, 0, 1.0f);
 }
 
 void AMyTestCharacter::DepleteRunHealth(float DeltaTime)
 {
-    RunHealth -= SprintDepletionRate * DeltaTime;    // SprintDepletionRate���� RunHealth�� ���ҽ�Ŵ
+    RunHealth -= SprintDepletionRate * DeltaTime; 
 
-    // ü���� 0 ���Ϸ� �������� �� �޸��� ����
     if (RunHealth <= 0)
     {
         RunHealth = 0;
@@ -277,10 +301,9 @@ void AMyTestCharacter::DepleteRunHealth(float DeltaTime)
 
 void AMyTestCharacter::RecoverRunHealth(float DeltaTime)
 {
-    RunHealth += SprintRecoveryRate * DeltaTime;    // SprintRecoveryRate���� RunHealth�� ������Ŵ
+    RunHealth += SprintRecoveryRate * DeltaTime;   
 
-    // �ִ� RunHealth�� �ʰ����� �ʵ��� ����
-    if (RunHealth > 10.0f)    // �ִ� RunHealth ��
+    if (RunHealth > 10.0f)  
     {
         RunHealth = 10.0f;
     }
@@ -301,24 +324,17 @@ bool AMyTestCharacter::HasPoint()
     }
     return false;
 }
-
-void AMyTestCharacter::UseNoise()
+int AMyTestCharacter::GetPoint()
 {
-    UE_LOG(LogTemp, Log, TEXT("Use Noise"));
     for (int i = 0; i < Inventory.Num(); i++)
     {
-        if (Inventory[i] == EItemType::Item_Noise)
+        if (Inventory[i] == EItemType::Item_Point)
         {
-            FVector myLoc = GetActorLocation();
-            FRotator myRot = GetActorRotation();
-            FActorSpawnParameters SpawnInfo;
-            ANoiseActor* noise =
-                GetWorld()->SpawnActor<ANoiseActor>(ANoiseActor::StaticClass(), myLoc, myRot, SpawnInfo);
-            AGameModeBase* curBase = GetWorld()->GetAuthGameMode();
-            AProjectRobberyGameMode* curGameModeBase = Cast<AProjectRobberyGameMode>(curBase);
-            curGameModeBase->UseItems(Inventory[i]);
-            Inventory[i] = EItemType::Item_None;
-            break;
+            point++;
+            UE_LOG(LogTemp, Log, TEXT("Point increased: %d"), point);
+            Inventory[i] = EItemType::Item_None;    // 아이템을 사용한 것으로 처리
+            break;    // 필요한 경우 찾았으면 반복문을 빠져나갈 수 있습니다.
         }
     }
+    return point;
 }
