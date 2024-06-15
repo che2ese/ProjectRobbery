@@ -7,7 +7,6 @@
 #include "../YourAIController.h"
 #include "Kismet/GameplayStatics.h"
 #include "EngineUtils.h"
-//#include "적들 전부"
 
 // Sets default values
 ANoiseActor::ANoiseActor()

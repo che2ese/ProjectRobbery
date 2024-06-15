@@ -33,6 +33,8 @@ public:
 
     UFUNCTION()
     bool HasPoint();
+    int GetPoint();
+    int point;
 
     UFUNCTION()
     void UseCamera();
@@ -58,13 +60,21 @@ public:
     USoundBase* DogSound;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Audio, meta = (AllowPrivateAccess = "true"))
-    class UAudioComponent* DogAudioComponent;    // 강아지 소리를 재생할 오디오 컴포넌트
+    class UAudioComponent* DogAudioComponent;
 
-    FTimerHandle SprintDepletionTimerHandle;    // SprintDepletion Ÿ�̸� �ڵ�
-    void DepleteRunHealth(float DeltaTime);     // SprintDepletionRate���� RunHealth�� ���ҽ�Ű�� �Լ�
-    void RecoverRunHealth(float DeltaTime);     // SprintRecoveryRate���� RunHealth�� ������Ű�� �Լ�
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+    USoundBase* NoiseSound;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Audio, meta = (AllowPrivateAccess = "true"))
+    class UAudioComponent* NoiseAudioComponent;
+
+    FTimerHandle SprintDepletionTimerHandle; 
+    void DepleteRunHealth(float DeltaTime); 
+    void RecoverRunHealth(float DeltaTime);
 
     void PlaySoundEvent();
+
+    bool noiseActive;
 
 private:
     void MoveForward(float Value);

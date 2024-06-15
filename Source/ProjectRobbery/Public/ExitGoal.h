@@ -27,6 +27,8 @@ public:
                                  int32 OtherBodyIndex,
                                  bool bFromSweep,
                                  const FHitResult& SweepResult);
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GamePlay")
+    int RequiredPoint;
 
 protected:
 	// Called when the game starts or when spawned
@@ -36,4 +38,6 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+private:
+    bool bMissionCompleted;    // 미션 완료 상태
 };

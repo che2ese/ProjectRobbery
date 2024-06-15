@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "ItemBase.h"
+#include "ExitGoal.h"
 #include "ProjectRobberyGameMode.generated.h"
 
 UCLASS(minimalapi)
@@ -33,6 +34,8 @@ public:
     int32 cameras = 0;
     UPROPERTY(EditAnywhere)
     int32 noises = 0;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GamePlay")
+    int32 points;
 
     UFUNCTION()
     void AddItems(EItemType Item);
@@ -53,4 +56,6 @@ private:
 public:
     void ShowGameOverMenu();
     void ShowClearMenu();
+
+
 };

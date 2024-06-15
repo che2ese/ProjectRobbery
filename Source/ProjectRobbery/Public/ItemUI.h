@@ -18,7 +18,9 @@ public:
     UPROPERTY(EditAnywhere, meta = (BindWidget))
     class UTextBlock* countCoat;
     UPROPERTY(EditAnywhere, meta = (BindWidget))
+    class UTextBlock* countCamera;
+    UPROPERTY(EditAnywhere, meta = (BindWidget))
     class UTextBlock* countNoise;
     UPROPERTY(EditAnywhere, meta = (BindWidget))
-    class UTextBlock* countCamera;
+    class UTextBlock* countPoint;
 };
